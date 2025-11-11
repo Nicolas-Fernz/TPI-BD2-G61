@@ -24,6 +24,37 @@ CREATE TABLE Socio(
 	REFERENCES DatosPersonales(IdDatosPersonales)
 );
 
+CREATE TABLE SocioHorario (
+    IdHorario        INT IDENTITY(1,1) PRIMARY KEY,
+    IdSocio          INT  NOT NULL,
+    FechaInscripcion DATE NOT NULL,
+    CONSTRAINT FK_SocioHorario_Socio
+    FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio)
+
+);
+
+CREATE TABLE Instructor (
+    IdInstructor      INT IDENTITY(1,1) PRIMARY KEY,
+    IdDatosPersonales INT NOT NULL, 
+    Especialidad      VARCHAR(100) NULL,
+    CONSTRAINT FK_Instructor_DatosPersonales
+        FOREIGN KEY (IdDatosPersonales)
+        REFERENCES DatosPersonales(IdDatosPersonales)
+);
+
+
+CREATE TABLE DatosMedicos (
+    IdDatosMedicos INT IDENTITY(1,1) PRIMARY KEY,
+    IdSocio        INT NOT NULL,
+    GrupoSanguineo VARCHAR(5)   NULL,
+    Alergias       VARCHAR(200) NULL,
+    Lesiones       VARCHAR(200) NULL,
+    AptoFisicoVto  DATE         NULL,
+    Observaciones  VARCHAR(255) NULL,
+    CONSTRAINT FK_DatosMedicos_Socio
+        FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio)
+);
+
 
 CREATE TABLE Usuario(
     IdUsuario INT IDENTITY(1,1) PRIMARY KEY,
@@ -51,6 +82,11 @@ CREATE TABLE UsuarioRol (
     CONSTRAINT FK_UsuarioRol_Rol
         FOREIGN KEY (IdRol) REFERENCES Rol(IdRol)
 );
+CREATE TABLE PlanMembresia (
+    Id       INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre   VARCHAR(50) NOT NULL,
+    Duracion INT         NOT NULL   -- meses
+);
 
 CREATE TABLE SocioMembresia (
     Id              INT IDENTITY(1,1) PRIMARY KEY,
@@ -77,8 +113,13 @@ CREATE TABLE Factura (
         FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio)
 );
 
-CREATE TABLE PlanMembresia (
-    Id       INT IDENTITY(1,1) PRIMARY KEY,
-    Nombre   VARCHAR(50) NOT NULL,
-    Duracion INT         NOT NULL   -- meses
+CREATE TABLE RutinaPersonalizada (
+    IdRutina     INT IDENTITY(1,1) PRIMARY KEY,
+    IdSocio      INT NOT NULL,
+    IdInstructor INT NOT NULL,
+    Descrip      VARCHAR(255) NOT NULL,
+    CONSTRAINT FK_Rutina_Socio
+        FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio),
+    CONSTRAINT FK_Rutina_Instructor
+        FOREIGN KEY (IdInstructor) REFERENCES Instructor(IdInstructor)
 );

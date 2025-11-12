@@ -123,3 +123,30 @@ CREATE TABLE RutinaPersonalizada (
     CONSTRAINT FK_Rutina_Instructor
         FOREIGN KEY (IdInstructor) REFERENCES Instructor(IdInstructor)
 );
+
+
+GO
+CREATE FUNCTION dbo.fn_EstadoMembresia(@IdSocio INT)
+RETURNS VARCHAR(20)
+AS
+BEGIN
+DECLARE @Estado VARCHAR(20);
+IF EXISTS (
+	SELECT 1
+    FROM SocioMembresia
+    WHERE IdSocio = @IdSocio
+    AND Activo = 1
+	AND (FechaFin IS NULL OR FechaFin >= CAST(GETDATE() AS DATE))
+    )
+SET @Estado = 'Activa';
+    ELSE IF EXISTS (
+        SELECT 1
+        FROM SocioMembresia
+        WHERE IdSocio = @IdSocio
+    )
+        SET @Estado = 'Vencida';
+    ELSE
+        SET @Estado = 'Sin membresia';
+    RETURN @Estado;
+END;
+GO

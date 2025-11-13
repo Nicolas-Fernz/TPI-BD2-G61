@@ -150,3 +150,22 @@ SET @Estado = 'Activa';
     RETURN @Estado;
 END;
 GO
+
+CREATE VIEW v_FacturasPendientes
+AS
+SELECT
+    f.Id,
+    f.IdSocio,
+    dp.Nombre,
+    dp.Apellido,
+    f.Importe,
+    f.FechaFacturacion,
+    f.TipoFactu,
+    f.Descrip,
+    f.Pagado,
+    dbo.fn_EstadoMembresia(f.IdSocio) AS EstadoMembresia
+FROM Factura f
+JOIN Socio s ON f.IdSocio = s.IdSocio
+JOIN DatosPersonales dp ON s.IdDatosPersonales = dp.IdDatosPersonales
+WHERE f.Pagado = 0;
+GO

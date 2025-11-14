@@ -168,4 +168,24 @@ FROM Factura f
 JOIN Socio s ON f.IdSocio = s.IdSocio
 JOIN DatosPersonales dp ON s.IdDatosPersonales = dp.IdDatosPersonales
 WHERE f.Pagado = 0;
+
 GO
+
+CREATE VIEW v_RutinasPorInstructor
+AS
+(SELECT  RP.IdRutina, 
+        S.IdSocio,
+        (DPS.Nombre + ' '+ DPS.Apellido) NombreSocio, 
+        I.IdInstructor,
+        (DPI.Nombre + ' '+ DPI.Apellido) NombreInstructor, 
+        I.Especialidad, 
+        RP.Descrip Rutina
+FROM RutinaPersonalizada RP  
+JOIN Socio S ON S.IdSocio = RP.IdSocio
+JOIN Instructor I ON I.IdInstructor = RP.IdInstructor
+JOIN DatosPersonales DPS ON DPS.IdDatosPersonales = S.IdDatosPersonales
+JOIN DatosPersonales DPI ON DPI.IdDatosPersonales = I.IdDatosPersonales)
+
+GO
+
+

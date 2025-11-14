@@ -187,5 +187,83 @@ JOIN DatosPersonales DPS ON DPS.IdDatosPersonales = S.IdDatosPersonales
 JOIN DatosPersonales DPI ON DPI.IdDatosPersonales = I.IdDatosPersonales)
 
 GO
+CREATE VIEW v_SociosDetalle
+AS
+SELECT
+    s.IdSocio,
 
+    -- Datos Personales
+    dp.Nombre,
+    dp.Apellido,
+    dp.Dni,
+    dp.Telefono,
+    dp.Email,
+    dp.Direccion,
+    dp.FechaNacimiento,
+
+    -- Datos del socio
+    s.FechaAlta,
+    s.Estado AS EstadoSocio,
+
+    -- Membresía actual (si la tiene)
+    pm.Id AS IdPlan,
+    pm.Nombre AS PlanNombre,
+    pm.Duracion AS PlanDuracionMeses,
+
+    sm.FechaInicio AS MembresiaFechaInicio,
+    sm.FechaFin AS MembresiaFechaFin,
+    sm.Activo AS MembresiaActiva,
+
+    -- Estado calculado con tu función
+    dbo.fn_EstadoMembresia(s.IdSocio) AS EstadoMembresia,
+
+    -- Datos Médicos
+    dm.GrupoSanguineo,
+    dm.Alergias,
+    dm.Lesiones,
+    dm.AptoFisicoVto,
+    dm.Observaciones AS ObservacionesMedicas,
+
+    -- Horarios (si se usa la tabla de inscripción)
+    sh.FechaInscripcion AS FechaInscripcionHorario,
+
+    -- Última factura (opcional)
+    fUltima.Importe AS UltimaFacturaImporte,
+    fUltima.FechaFacturacion AS UltimaFacturaFecha,
+    fUltima.Pagado AS UltimaFacturaPagado
+
+FROM Socio s
+JOIN DatosPersonales dp 
+    ON s.IdDatosPersonales = dp.IdDatosPersonales
+
+-- Membresía (puede ser NULL si no tiene)
+LEFT JOIN SocioMembresia sm 
+    ON sm.IdSocio = s.IdSocio 
+    AND sm.Activo = 1
+
+LEFT JOIN PlanMembresia pm
+    ON sm.IdPlanMembresia = pm.Id
+
+-- Datos Médicos
+LEFT JOIN DatosMedicos dm
+    ON dm.IdSocio = s.IdSocio
+
+-- Horarios
+LEFT JOIN SocioHorario sh
+    ON sh.IdSocio = s.IdSocio
+
+-- Última factura emitida
+LEFT JOIN (
+    SELECT f1.*
+    FROM Factura f1
+    JOIN (
+        SELECT IdSocio, MAX(FechaFacturacion) FechaMax
+        FROM Factura
+        GROUP BY IdSocio
+    ) fx
+        ON f1.IdSocio = fx.IdSocio
+       AND f1.FechaFacturacion = fx.FechaMax
+) fUltima
+    ON fUltima.IdSocio = s.IdSocio;
+GO
 

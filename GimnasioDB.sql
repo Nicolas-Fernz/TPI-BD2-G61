@@ -288,36 +288,47 @@ SET NOCOUNT ON;
 END;
 GO
 
-
-CREATE PROCEDURE sp_RegistrarFactura
+--   Este procedimiento almancenado inserta una nueva factura a un socio, cargando el importe, tipo , descripcion y la fecha. 
+-- La factura por defecto se registra Pagado =0. Al finaliza devuelde el ID de la factura generada mediante SCOPE_IDENTITY ()
+-- COn distintas validaciones probadas.
+CREATE OR ALTER PROCEDURE sp_RegistrarFactura
     @IdSocio INT,
     @Importe MONEY,
     @TipoFactu VARCHAR(30),
     @Descrip VARCHAR(255) = NULL
 AS
 BEGIN
-    SET NOCOUNT ON;
 
+    IF Trim(@TipoFactu) = ''
+    BEGIN
+    RAISERROR('El tipo de factura no puede estar vaico', 16, 1);
+    RETURN;
+    END;
+
+    -- VALidando que el socio exita 
+    IF NOT EXISTS (SELECT 1 FROM Socio WHERE IdSocio = @IdSocio)
+    BEGIN
+    RAISERROR('El socio indicado no existe.', 16, 1);
+    RETURN;
+    END;
+
+    -- Validacion de importe 
+    IF @Importe IS NULL OR @Importe <= 0
+    BEGIN
+    RAISERROR('El importe debe ser mayor a cero.', 16, 1);
+    RETURN;
+    END;
+
+-- insert con validaciones Trim
     INSERT INTO Factura (IdSocio, Importe, FechaFacturacion, TipoFactu, Descrip, Pagado)
-    VALUES (@IdSocio, @Importe, CAST(GETDATE() AS DATE), @TipoFactu, @Descrip, 0);
+    VALUES (
+    @IdSocio,
+    @Importe,
+    CAST(GETDATE() AS DATE),
+    Trim(@TipoFactu),
+    Trim(@Descrip),
+    0);
 
-    SELECT SCOPE_IDENTITY() AS IdFacturaCreada;
-END;
-GO
-
---   Este procedimiento almancenado inserta una nueva factura a un socio, cargando el importe, tipo , descripcion y la fecha. 
--- La factura por defecto se registra Pagado =0. Al finaliza devuelde el ID de la factura generada mediante SCOPE_IDENTITY ()
- 
-CREATE PROCEDURE sp_RegistrarFactura
-    @IdSocio   INT,
-    @Importe   MONEY,
-    @TipoFactu VARCHAR(30),
-    @Descrip   VARCHAR(255) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    INSERT INTO Factura (IdSocio, Importe, FechaFacturacion, TipoFactu, Descrip, Pagado)
-    VALUES (@IdSocio, @Importe, CAST(GETDATE() AS DATE), @TipoFactu, @Descrip, 0);
     SELECT SCOPE_IDENTITY() AS IdFacturaCreada;
 END;
 GO

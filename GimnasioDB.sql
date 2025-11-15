@@ -384,3 +384,32 @@ BEGIN
     FROM deleted d;
 END;
 GO
+CREATE TRIGGER TRG_Socio_AU
+ON Socio
+AFTER UPDATE
+AS
+BEGIN
+    -- Auditoría de cambios
+    INSERT INTO SocioAuditoria (IdSocio, Campo, ValorAnterior, ValorNuevo, Fecha)
+    SELECT
+        i.IdSocio,
+        'Plan',
+        d.IdPlan,
+        i.IdPlan,
+        GETDATE()
+    FROM inserted i
+    JOIN deleted d ON i.IdSocio = d.IdSocio
+    WHERE i.IdPlan <> d.IdPlan;
+
+    -- Validaciones
+    IF EXISTS (
+        SELECT 1 FROM inserted i
+        JOIN deleted d ON i.IdSocio = d.IdSocio
+        WHERE i.DNI <> d.DNI
+    )
+    BEGIN
+        RAISERROR('No se puede modificar el DNI del socio.',16,1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+END;

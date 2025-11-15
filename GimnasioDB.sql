@@ -267,3 +267,19 @@ LEFT JOIN (
     ON fUltima.IdSocio = s.IdSocio;
 GO
 
+-- Trigger
+CREATE TRIGGER TRG_SocioMembresia_AI
+ON SocioMembresia
+AFTER INSERT
+AS
+BEGIN
+SET NOCOUNT ON;
+    -- cuando se da de alta una nueva membresia, desactiva otras activas del mismo socio
+    UPDATE sm
+    SET Activo = 0,
+	FechaFin = CAST(GETDATE() AS DATE)
+    FROM SocioMembresia sm
+    JOIN inserted i ON sm.IdSocio = i.IdSocio
+    WHERE sm.Id <> i.Id AND sm.Activo = 1;
+END;
+GO

@@ -333,8 +333,9 @@ BEGIN
 END;
 
 GO
---   Este procedimiento almancenado inserta una nueva factura a un socio, cargando el importe, tipo , descripcion y la fecha. 
--- La factura por defecto se registra Pagado =0. Al finaliza devuelde el ID de la factura generada mediante SCOPE_IDENTITY ()
+-- Este procedimiento almacenado genera un reporte de socios por plan de membresía,
+-- permitiendo filtrar por plan y por membresías activas/inactivas. 
+-- Usa la función fn_EstadoMembresia para calcular el estado actual.
 CREATE PROCEDURE sp_ReporteSociosPorPlan
     @IdPlanMembresia INT = NULL,
     @BuscarSoloActivos BIT = 1
@@ -359,6 +360,9 @@ END;
 GO
 
 EXEC sp_ReporteSociosPorPlan null, 1;
+
+GO
+
 CREATE OR ALTER TRIGGER TRG_Socio_AU
 ON Socio
 AFTER UPDATE

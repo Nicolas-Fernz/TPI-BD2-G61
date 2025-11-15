@@ -359,7 +359,7 @@ END;
 GO
 
 EXEC sp_ReporteSociosPorPlan null, 1;
-CREATE OR ALTER TRIGGER TRG_SocioMembresia_AD
+CREATE TRIGGER TRG_SocioMembresia_AD
 ON SocioMembresia
 AFTER DELETE
 AS
@@ -384,3 +384,76 @@ BEGIN
     FROM deleted d;
 END;
 GO
+CREATE OR ALTER TRIGGER TRG_Socio_AU
+ON Socio
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- No permitir cambiar la persona asociada al socio
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        JOIN deleted d ON i.IdSocio = d.IdSocio
+        WHERE i.IdDatosPersonales <> d.IdDatosPersonales
+    )
+    BEGIN
+        RAISERROR('No se puede modificar IdDatosPersonales de un socio.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END;
+
+    -- Validar que FechaAlta no sea futura
+    IF EXISTS (
+        SELECT 1
+        FROM inserted
+        WHERE FechaAlta > CAST(GETDATE() AS DATE)
+    )
+    BEGIN
+        RAISERROR('La FechaAlta no puede ser futura.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END;
+
+    -- Validar Estado no vacío
+    IF EXISTS (
+        SELECT 1
+        FROM inserted
+        WHERE LTRIM(RTRIM(Estado)) = ''
+    )
+    BEGIN
+        RAISERROR('El Estado del socio no puede estar vacío.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END;
+
+END;
+GO
+CREATE OR ALTER TRIGGER TRG_SocioMembresia_AD
+ON SocioMembresia
+AFTER DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Evitar que un socio quede sin membresía activa si existía una
+    IF EXISTS (
+        SELECT 1 
+        FROM deleted d
+        WHERE d.Activo = 1
+          AND NOT EXISTS (
+                SELECT 1 
+                FROM SocioMembresia sm
+                WHERE sm.IdSocio = d.IdSocio
+                  AND sm.Activo = 1
+          )
+    )
+    BEGIN
+        RAISERROR('No se puede eliminar la única membresía activa del socio.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END;
+END;
+GO
+

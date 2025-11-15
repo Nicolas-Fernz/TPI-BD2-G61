@@ -331,4 +331,31 @@ BEGIN
 
     SELECT SCOPE_IDENTITY() AS IdFacturaCreada;
 END;
+
 GO
+--   Este procedimiento almancenado inserta una nueva factura a un socio, cargando el importe, tipo , descripcion y la fecha. 
+-- La factura por defecto se registra Pagado =0. Al finaliza devuelde el ID de la factura generada mediante SCOPE_IDENTITY ()
+CREATE PROCEDURE sp_ReporteSociosPorPlan
+    @IdPlanMembresia INT = NULL,
+    @BuscarSoloActivos BIT = 1
+AS
+BEGIN
+    SELECT
+        S.IdSocio,
+        SM.IdPlanMembresia,
+        (DP.Nombre + ' ' + DP.Apellido) NombreCompleto,
+        SM.FechaInicio,
+        SM.FechaFin,
+        SM.Activo MembresiaActiva,
+        dbo.fn_EstadoMembresia( s.IdSocio ) AS EstadoMembresia
+    FROM Socio S
+    JOIN SocioMembresia SM ON SM.IdSocio = S.IdSocio
+    JOIN DatosPersonales DP ON DP.IdDatosPersonales = S.IdDatosPersonales
+    --Si @BuscarSoloActivos es 0 busca tambien los inactivos, sino pregunta si SM esta activo
+    WHERE ( @BuscarSoloActivos = 0 OR SM.Activo = 1)  
+    --Si @IdPlanMembresia es diferente a NULL entonces pregunta si SM coincide con la variable
+    AND   ( @IdPlanMembresia IS NULL OR @IdPlanMembresia = SM.IdPlanMembresia)
+END;
+GO
+
+EXEC sp_ReporteSociosPorPlan null, 1;

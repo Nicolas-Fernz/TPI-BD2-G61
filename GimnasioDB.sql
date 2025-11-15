@@ -359,31 +359,6 @@ END;
 GO
 
 EXEC sp_ReporteSociosPorPlan null, 1;
-CREATE TRIGGER TRG_SocioMembresia_AD
-ON SocioMembresia
-AFTER DELETE
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    INSERT INTO LogSocioMembresia (
-        IdSocio,
-        IdPlanMembresia,
-        FechaInicio,
-        FechaFin,
-        FechaEliminacion,
-        Usuario
-    )
-    SELECT
-        d.IdSocio,
-        d.IdPlanMembresia,
-        d.FechaInicio,
-        d.FechaFin,
-        GETDATE(),
-        SYSTEM_USER
-    FROM deleted d;
-END;
-GO
 CREATE OR ALTER TRIGGER TRG_Socio_AU
 ON Socio
 AFTER UPDATE

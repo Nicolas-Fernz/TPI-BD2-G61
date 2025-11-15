@@ -430,30 +430,28 @@ BEGIN
 
 END;
 GO
-CREATE OR ALTER TRIGGER TRG_SocioMembresia_AD
+CREATE TRIGGER TRG_SocioMembresia_AD
 ON SocioMembresia
 AFTER DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Evitar que un socio quede sin membresía activa si existía una
-    IF EXISTS (
-        SELECT 1 
-        FROM deleted d
-        WHERE d.Activo = 1
-          AND NOT EXISTS (
-                SELECT 1 
-                FROM SocioMembresia sm
-                WHERE sm.IdSocio = d.IdSocio
-                  AND sm.Activo = 1
-          )
+    INSERT INTO LogSocioMembresia (
+        IdSocio,
+        IdPlanMembresia,
+        FechaInicio,
+        FechaFin,
+        FechaEliminacion,
+        Usuario
     )
-    BEGIN
-        RAISERROR('No se puede eliminar la única membresía activa del socio.', 16, 1);
-        ROLLBACK TRANSACTION;
-        RETURN;
-    END;
+    SELECT
+        d.IdSocio,
+        d.IdPlanMembresia,
+        d.FechaInicio,
+        d.FechaFin,
+        GETDATE(),
+        SYSTEM_USER
+    FROM deleted d;
 END;
 GO
-

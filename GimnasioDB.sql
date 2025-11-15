@@ -151,6 +151,10 @@ SET @Estado = 'Activa';
 END;
 GO
 
+-- Esta vista v_FacturasPendientes muestra todas las facturas que todavia no fueron pagadas. Junta los datos del socio, sus datos personales
+-- y la factura, tambien calcula el estado de la membrecia con la funcion fn_EstadoMembresia.
+-- No guarda datos, solo muesta una consulta lista para usar.
+
 CREATE VIEW v_FacturasPendientes
 AS
 SELECT
@@ -301,6 +305,9 @@ BEGIN
 END;
 GO
 
+--   Este procedimiento almancenado inserta una nueva factura a un socio, cargando el importe, tipo , descripcion y la fecha. 
+-- La factura por defecto se registra Pagado =0. Al finaliza devuelde el ID de la factura generada mediante SCOPE_IDENTITY ()
+ 
 CREATE PROCEDURE sp_RegistrarFactura
     @IdSocio   INT,
     @Importe   MONEY,

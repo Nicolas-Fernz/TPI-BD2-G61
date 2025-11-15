@@ -75,49 +75,49 @@ CREATE TABLE Rol(
 
 CREATE TABLE UsuarioRol (
     IdUsuario INT NOT NULL,
-    IdRol     INT NOT NULL,
+    IdRol INT NOT NULL,
     PRIMARY KEY (IdUsuario, IdRol),
     CONSTRAINT FK_UsuarioRol_Usuario
-        FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
+    FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
     CONSTRAINT FK_UsuarioRol_Rol
-        FOREIGN KEY (IdRol) REFERENCES Rol(IdRol)
+    FOREIGN KEY (IdRol) REFERENCES Rol(IdRol)
 );
 CREATE TABLE PlanMembresia (
-    Id       INT IDENTITY(1,1) PRIMARY KEY,
-    Nombre   VARCHAR(50) NOT NULL,
-    Duracion INT         NOT NULL   -- meses
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre VARCHAR(50) NOT NULL,
+    Duracion INT NOT NULL 
 );
 
 CREATE TABLE SocioMembresia (
-    Id              INT IDENTITY(1,1) PRIMARY KEY,
-    IdSocio         INT  NOT NULL,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    IdSocio INT  NOT NULL,
     IdPlanMembresia INT  NOT NULL,
-    FechaInicio     DATE NOT NULL,
-    FechaFin        DATE NULL,
-    Activo          BIT  NOT NULL DEFAULT 1,
+    FechaInicio DATE NOT NULL,
+    FechaFin DATE NULL,
+    Activo BIT  NOT NULL DEFAULT 1,
     CONSTRAINT FK_SocioMembresia_Socio
-        FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio),
+    FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio),
     CONSTRAINT FK_SocioMembresia_Plan
-        FOREIGN KEY (IdPlanMembresia) REFERENCES PlanMembresia(Id)
+    FOREIGN KEY (IdPlanMembresia) REFERENCES PlanMembresia(Id)
 );
 
 CREATE TABLE Factura (
-    Id               INT IDENTITY(1,1) PRIMARY KEY,
-    IdSocio          INT        NOT NULL,
-    Importe          MONEY      NOT NULL,
-    FechaFacturacion DATE       NOT NULL,
-    TipoFactu        VARCHAR(30) NOT NULL,
-    Descrip          VARCHAR(255) NULL,
-    Pagado           BIT        NOT NULL DEFAULT 0,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    IdSocio INT NOT NULL,
+    Importe MONEY NOT NULL,
+    FechaFacturacion DATE NOT NULL,
+    TipoFactu VARCHAR(30) NOT NULL,
+    Descrip VARCHAR(255) NULL,
+    Pagado BIT NOT NULL DEFAULT 0,
     CONSTRAINT FK_Factura_Socio
-        FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio)
+    FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio)
 );
 
 CREATE TABLE RutinaPersonalizada (
-    IdRutina     INT IDENTITY(1,1) PRIMARY KEY,
-    IdSocio      INT NOT NULL,
+    IdRutina INT IDENTITY(1,1) PRIMARY KEY,
+    IdSocio INT NOT NULL,
     IdInstructor INT NOT NULL,
-    Descrip      VARCHAR(255) NOT NULL,
+    Descrip VARCHAR(255) NOT NULL,
     CONSTRAINT FK_Rutina_Socio
         FOREIGN KEY (IdSocio) REFERENCES Socio(IdSocio),
     CONSTRAINT FK_Rutina_Instructor
@@ -281,5 +281,36 @@ SET NOCOUNT ON;
     FROM SocioMembresia sm
     JOIN inserted i ON sm.IdSocio = i.IdSocio
     WHERE sm.Id <> i.Id AND sm.Activo = 1;
+END;
+GO
+
+
+CREATE PROCEDURE sp_RegistrarFactura
+    @IdSocio INT,
+    @Importe MONEY,
+    @TipoFactu VARCHAR(30),
+    @Descrip VARCHAR(255) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO Factura (IdSocio, Importe, FechaFacturacion, TipoFactu, Descrip, Pagado)
+    VALUES (@IdSocio, @Importe, CAST(GETDATE() AS DATE), @TipoFactu, @Descrip, 0);
+
+    SELECT SCOPE_IDENTITY() AS IdFacturaCreada;
+END;
+GO
+
+CREATE PROCEDURE sp_RegistrarFactura
+    @IdSocio   INT,
+    @Importe   MONEY,
+    @TipoFactu VARCHAR(30),
+    @Descrip   VARCHAR(255) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO Factura (IdSocio, Importe, FechaFacturacion, TipoFactu, Descrip, Pagado)
+    VALUES (@IdSocio, @Importe, CAST(GETDATE() AS DATE), @TipoFactu, @Descrip, 0);
+    SELECT SCOPE_IDENTITY() AS IdFacturaCreada;
 END;
 GO

@@ -271,23 +271,6 @@ LEFT JOIN (
     ON fUltima.IdSocio = s.IdSocio;
 GO
 
--- Trigger
-CREATE TRIGGER TRG_SocioMembresia_AI
-ON SocioMembresia
-AFTER INSERT
-AS
-BEGIN
-SET NOCOUNT ON;
-    -- cuando se da de alta una nueva membresia, desactiva otras activas del mismo socio
-    UPDATE sm
-    SET Activo = 0,
-	FechaFin = CAST(GETDATE() AS DATE)
-    FROM SocioMembresia sm
-    JOIN inserted i ON sm.IdSocio = i.IdSocio
-    WHERE sm.Id <> i.Id AND sm.Activo = 1;
-END;
-GO
-
 --   Este procedimiento almancenado inserta una nueva factura a un socio, cargando el importe, tipo , descripcion y la fecha. 
 -- La factura por defecto se registra Pagado =0. Al finaliza devuelde el ID de la factura generada mediante SCOPE_IDENTITY ()
 -- COn distintas validaciones probadas.
@@ -363,6 +346,23 @@ EXEC sp_ReporteSociosPorPlan null, 1;
 
 GO
 
+-- TRIGGERS --
+CREATE TRIGGER TRG_SocioMembresia_AI
+ON SocioMembresia
+AFTER INSERT
+AS
+BEGIN
+SET NOCOUNT ON;
+    -- cuando se da de alta una nueva membresia, desactiva otras activas del mismo socio
+    UPDATE sm
+    SET Activo = 0,
+	FechaFin = CAST(GETDATE() AS DATE)
+    FROM SocioMembresia sm
+    JOIN inserted i ON sm.IdSocio = i.IdSocio
+    WHERE sm.Id <> i.Id AND sm.Activo = 1;
+END;
+GO
+
 CREATE OR ALTER TRIGGER TRG_Socio_AU
 ON Socio
 AFTER UPDATE
@@ -409,6 +409,7 @@ BEGIN
 
 END;
 GO
+
 CREATE OR ALTER TRIGGER TRG_SocioMembresia_AD
 ON SocioMembresia
 AFTER DELETE
@@ -416,21 +417,17 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO LogSocioMembresia (
-        IdSocio,
-        IdPlanMembresia,
-        FechaInicio,
-        FechaFin,
-        FechaEliminacion,
-        Usuario
-    )
-    SELECT
-        d.IdSocio,
-        d.IdPlanMembresia,
-        d.FechaInicio,
-        d.FechaFin,
-        GETDATE(),
-        SYSTEM_USER
-    FROM deleted d;
+-- en caso que el socio se quede sin ninguna membresia, se marca como inactivo
+    UPDATE s
+    SET s.Estado = 'Inactivo'
+    FROM Socio s
+    WHERE s.IdSocio IN (
+        SELECT d.IdSocio
+        FROM deleted d
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM SocioMembresia sm
+            WHERE sm.IdSocio = d.IdSocio
+        )
+    );
 END;
-GO

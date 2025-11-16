@@ -13,5 +13,13 @@ namespace GimnasioWeb
         {
 
         }
+        protected void btnFiltrar_Click(object sender, EventArgs e)
+        {
+
+        }
+        protected void btnFactura_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

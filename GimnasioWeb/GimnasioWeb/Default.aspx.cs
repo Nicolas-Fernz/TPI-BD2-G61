@@ -10,7 +10,7 @@ namespace GimnasioWeb
     {   private string ConnStr =>
         ConfigurationManager.ConnectionStrings["GimnasioDB"].ConnectionString;
 
-        protected void Page_Load(object sender, EventArgs e)
+        protected void Page_Load(object sender, EventArgs e) //
         {
         if (!IsPostBack)
             {   CargarPlanes();

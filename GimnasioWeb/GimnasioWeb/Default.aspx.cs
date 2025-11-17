@@ -87,21 +87,30 @@ namespace GimnasioWeb
 
                     con.Open();
 
+                    // El SP crea la factura siempre con Pagado = 0
                     var idFacturaObj = cmd.ExecuteScalar();
                     int idFactura = Convert.ToInt32(idFacturaObj);
 
-                    using (var cmdPago = new SqlCommand(
-                        "UPDATE Factura SET Pagado = 1 WHERE Id = @id", con))
+                    // Si el usuario tildó el check, la marcamos como pagada
+                    if (chkMarcarPagada.Checked)
                     {
-                        cmdPago.Parameters.AddWithValue("@id", idFactura);
-                        cmdPago.ExecuteNonQuery();
+                        using (var cmdPago = new SqlCommand(
+                            "UPDATE Factura SET Pagado = 1 WHERE Id = @id", con))
+                        {
+                            cmdPago.Parameters.AddWithValue("@id", idFactura);
+                            cmdPago.ExecuteNonQuery();
+                        }
+
+                        lblResultado.ForeColor = System.Drawing.Color.Green;
+                        lblResultado.Text =
+                            "Factura creada y marcada como PAGADA. Id = " + idFactura;
                     }
-
-                    lblResultado.ForeColor = System.Drawing.Color.Green;
-                    lblResultado.Text =
-                        "Factura creada y marcada como pagada. Id = " + idFactura;
-
-                    
+                    else
+                    {
+                        lblResultado.ForeColor = System.Drawing.Color.Green;
+                        lblResultado.Text =
+                            "Factura creada como NO pagada (pendiente). Id = " + idFactura;
+                    }
                 }
             }
             catch (Exception ex)
@@ -111,5 +120,6 @@ namespace GimnasioWeb
                     "Error al crear la factura: " + ex.Message;
             }
         }
+    
     }
 }

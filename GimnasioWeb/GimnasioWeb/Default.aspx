@@ -95,6 +95,14 @@
                                 Rows="3" />
                         </div>
 
+                        <div class="form-check mb-3">
+                        <asp:CheckBox ID="chkMarcarPagada" runat="server"
+                         CssClass="form-check-input" />
+                         <label class="form-check-label" for="chkMarcarPagada">
+                         Marcar como pagada
+                         </label>
+                        div>
+
                         <asp:Button ID="btnFactura" runat="server"
                             Text="Crear factura"
                             CssClass="btn btn-success w-100 mb-2"
